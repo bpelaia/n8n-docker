@@ -1,0 +1,15 @@
+# Escludi file di ambiente reali
+.env
+
+# Escludi directory files, ma mantieni il placeholder
+files/*
+!files/.placeholder
+
+# Escludi volumi persistenti locali
+pg_data/
+n8n_data/
+
+# Log o dump temporanei
+*.log
+*.dump
+
