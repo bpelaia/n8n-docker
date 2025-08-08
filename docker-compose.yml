@@ -1,14 +1,14 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16-alpine
     init: true
     #restart: unless-stopped
     environment:
+      TZ: Europe/Rome
       POSTGRES_USER: ${DB_POSTGRESDB_USER}
       POSTGRES_PASSWORD: ${DB_POSTGRESDB_PASSWORD}
       POSTGRES_DB: ${DB_POSTGRESDB_DATABASE}
+    command: ["postgres", "-c", "timezone=Europe/Rome"]
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
@@ -19,7 +19,6 @@ services:
 
   n8n:
     image: docker.n8n.io/n8nio/n8n:latest
-    init: true
     #restart: unless-stopped
     depends_on:
       postgres:
@@ -27,14 +26,20 @@ services:
     ports:
       - "5678:5678"
     environment:
+      TZ: Europe/Rome
       GENERIC_TIMEZONE: Europe/Rome
+
+      # URL
       N8N_HOST: ${N8N_HOST}
       N8N_PORT: 5678
       N8N_PROTOCOL: http
       WEBHOOK_URL: ${WEBHOOK_URL}
 
+      # Sicurezza
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE:-true}
 
+      # DB
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_PORT: 5432
@@ -42,8 +47,15 @@ services:
       DB_POSTGRESDB_USER: ${DB_POSTGRESDB_USER}
       DB_POSTGRESDB_PASSWORD: ${DB_POSTGRESDB_PASSWORD}
 
-      EXECUTIONS_DATA_PRUNE: "true"
-      EXECUTIONS_DATA_MAX_AGE: "168"
+      # Retention esecuzioni (valori presi dal .env; se non definiti n8n usa i propri default)
+      EXECUTIONS_DATA_PRUNE: ${EXECUTIONS_DATA_PRUNE:-true}
+      EXECUTIONS_DATA_MAX_AGE: ${EXECUTIONS_DATA_MAX_AGE:-168}
+      EXECUTIONS_DATA_MAX_COUNT: ${EXECUTIONS_DATA_MAX_COUNT:-0}
+      EXECUTIONS_DATA_PRUNE_MAX_COUNT: ${EXECUTIONS_DATA_PRUNE_MAX_COUNT:-5000}
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: ${EXECUTIONS_DATA_SAVE_ON_SUCCESS:-none}
+      EXECUTIONS_DATA_SAVE_ON_ERROR: ${EXECUTIONS_DATA_SAVE_ON_ERROR:-all}
+      EXECUTIONS_DATA_SAVE_ON_MANUAL_EXECUTIONS: ${EXECUTIONS_DATA_SAVE_ON_MANUAL_EXECUTIONS:-all}
+
     volumes:
       - n8n_data:/home/node/.n8n
       - ./files:/files
