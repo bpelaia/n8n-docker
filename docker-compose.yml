@@ -1,4 +1,13 @@
 services:
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - ${DEV_MAIL_PORT:-8025}:8025
+    environment:
+    #  MH_AUTH_FILE: /auth-file
+      TZ: Europe/Rome
+    #volumes:
+    #  - ./mailhog.auth-file:/auth-file
   postgres:
     image: postgres:16-alpine
     init: true
@@ -23,6 +32,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mailhog:
+        condition: service_started
     ports:
       - "5678:5678"
     environment:
@@ -55,6 +66,15 @@ services:
       EXECUTIONS_DATA_SAVE_ON_SUCCESS: ${EXECUTIONS_DATA_SAVE_ON_SUCCESS:-none}
       EXECUTIONS_DATA_SAVE_ON_ERROR: ${EXECUTIONS_DATA_SAVE_ON_ERROR:-all}
       EXECUTIONS_DATA_SAVE_ON_MANUAL_EXECUTIONS: ${EXECUTIONS_DATA_SAVE_ON_MANUAL_EXECUTIONS:-all}
+
+      # SMTP
+      N8N_EMAIL_MODE: ${N8N_EMAIL_MODE:-smtp}
+      N8N_SMTP_HOST: ${N8N_SMTP_HOST:-mailhog}
+      N8N_SMTP_PORT: ${N8N_SMTP_PORT:-1025}
+      N8N_SMTP_USER: ${N8N_SMTP_USER:-}
+      N8N_SMTP_PASS: ${N8N_SMTP_PASS:-}
+      N8N_SMTP_SENDER: ${N8N_SMTP_SENDER:-noreply-n8n@5minfo.it}
+      N8N_SMTP_SSL: ${N8N_SMTP_SSL:-false}
 
     volumes:
       - n8n_data:/home/node/.n8n
